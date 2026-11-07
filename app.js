@@ -76,8 +76,25 @@ const sampleCats = () => demoCategories.map(x=>({...x,demo:true}));
 const currentCats = () => state.categories.length ? state.categories.map(c=>({...c, photo: getCategoryImage(c.name), icon: getCategoryIcon(c.name)})) : sampleCats();
 const getCategoryImage = (name) => { const s=String(name).toLowerCase(); return s.includes('kvart')?'category-apartment.webp':s.includes('villa')?'category-villa.webp':s.includes('yer')?'category-land.webp':s.includes('tijor')||s.includes('ofis')?'category-office.webp':'category-house.webp'; };
 const getCategoryIcon = name => { const s=String(name).toLowerCase(); return s.includes('kvart')?'building':s.includes('villa')?'sun':s.includes('yer')?'layers':s.includes('tijor')||s.includes('ofis')?'briefcase':'house'; };
-const source = file => ASSET + file;
-const photoTag = (file, alt, cls='', loading='lazy') => `<img class="${cls}" src="${source(file)}" alt="${esc(alt)}" loading="${loading}" />`;
+// Full-size architectural photos. The small bundled photos remain as offline/error fallbacks.
+const PHOTO_URLS = Object.freeze({
+  'hero-villa.webp': 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=2200&q=90',
+  'category-house.webp': 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1280&q=90',
+  'category-apartment.webp': 'https://images.unsplash.com/photo-1464938050520-ef2270bb8ce8?auto=format&fit=crop&w=1280&q=90',
+  'category-villa.webp': 'https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=1280&q=90',
+  'category-land.webp': 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1280&q=90',
+  'category-office.webp': 'https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=1280&q=90',
+  'villa-modern.webp': 'https://images.unsplash.com/photo-1600585152915-d208bec867a1?auto=format&fit=crop&w=1600&q=90',
+  'apartment.webp': 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=1600&q=90',
+  'villa-pool.webp': 'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=1600&q=90',
+  'living-room.webp': 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1600&q=90',
+  'house-night.webp': 'https://images.unsplash.com/photo-1600585154526-990dced4db0d?auto=format&fit=crop&w=1600&q=90',
+});
+const source = file => PHOTO_URLS[file] || ASSET + file;
+const photoTag = (file, alt, cls='', loading='lazy') => {
+  const backup = ASSET + String(file).replace(/[^a-z0-9.-]/gi, '');
+  return `<img class="${cls}" src="${source(file)}" alt="${esc(alt)}" loading="${loading}" decoding="async" onerror="if(!this.dataset.fallback){this.dataset.fallback='1';this.src='${backup}'}" />`;
+};
 const url = (path, params={}) => { const q=new URLSearchParams(Object.entries(params).filter(([k,v])=>String(v).length>0)); return `#/${path}${q.size?'?'+q:''}`; };
 const route = () => {const text=decodeURI(location.hash.slice(1)||'/'); const [path,query='']=text.split('?'); return { path: path||'/', query: new URLSearchParams(query) }; };
 const navigate = (path) => { state.menuOpen=false; if (location.hash === path) { render(); window.scrollTo({top:0,behavior:'smooth'}); } else location.hash=path; };
