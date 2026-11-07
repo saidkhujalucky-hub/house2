@@ -44,20 +44,28 @@
 <script type="module">
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 
 const $=s=>document.querySelector(s);
 const scene=new THREE.Scene();scene.background=new THREE.Color('#8eb3cf');scene.fog=new THREE.FogExp2('#b6c7ce',0.009);
 const mobile=matchMedia('(max-width:700px)').matches;
 const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:'high-performance'});
-renderer.setPixelRatio(Math.min(devicePixelRatio,mobile?1.5:2));renderer.setSize(innerWidth,innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio,mobile?1.3:1.8));renderer.setSize(innerWidth,innerHeight);
 renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
-renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.33;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.21;
 renderer.outputColorSpace=THREE.SRGBColorSpace;
+// Indoor studio lighting in the environment map makes polished glass, steel and stone reflect softly.
+const reflectionMaker=new THREE.PMREMGenerator(renderer);
+const reflectionRoom=new RoomEnvironment();
+scene.environment=reflectionMaker.fromScene(reflectionRoom,.04).texture;
+scene.environmentIntensity=.60;
+reflectionRoom.dispose();reflectionMaker.dispose();
 $('#scene').prepend(renderer.domElement);renderer.domElement.tabIndex=0;renderer.domElement.setAttribute('aria-label','3D uy. WASD tugmalari bilan yuring, sichqoncha bilan qarang.');
 const camera=new THREE.PerspectiveCamera(55,innerWidth/innerHeight,.08,550);camera.position.set(27,15,31);
 const orbit=new OrbitControls(camera,renderer.domElement);orbit.target.set(-1,3,0);orbit.enableDamping=true;orbit.dampingFactor=.07;orbit.maxPolarAngle=Math.PI/2.12;orbit.minPolarAngle=.17;orbit.minDistance=4;orbit.maxDistance=65;orbit.enablePan=true;orbit.update();
 const hemi=new THREE.HemisphereLight('#e9f2ff','#6c664c',2.5);scene.add(hemi);
-const sun=new THREE.DirectionalLight('#fff1d8',3.2);sun.position.set(-21,35,24);sun.castShadow=true;sun.shadow.mapSize.set(mobile?1024:3072,mobile?1024:3072);sun.shadow.camera.left=-45;sun.shadow.camera.right=45;sun.shadow.camera.top=45;sun.shadow.camera.bottom=-45;sun.shadow.camera.near=1;sun.shadow.camera.far=110;sun.shadow.bias=-.0005;sun.shadow.normalBias=.035;scene.add(sun);
+const sun=new THREE.DirectionalLight('#fff1d8',3.2);sun.position.set(-21,35,24);sun.castShadow=true;sun.shadow.mapSize.set(mobile?1024:3072,mobile?1024:3072);sun.shadow.camera.left=-45;sun.shadow.camera.right=45;sun.shadow.camera.top=45;sun.shadow.camera.bottom=-45;sun.shadow.camera.near=1;sun.shadow.camera.far=110;sun.shadow.bias=-.00022;sun.shadow.normalBias=.018;scene.add(sun);
 const ambient=new THREE.AmbientLight('#ffffff',.30);scene.add(ambient);
 const lampLights=[];let night=false,cut=false,mode='orbit',floor2=false,transition=null,autoOrbit=true;
 const mat=(color,roughness=.8,metalness=0)=>new THREE.MeshStandardMaterial({color,roughness,metalness});
@@ -355,11 +363,185 @@ for(let i=0;i<9;i++){
 }
 // Visual-quality indicator: all architectural assets are real 3D geometry, not the listing photos.
 
+// ------ HIGH FIDELITY ARCHITECTURE PASS: physically responsive materials and crafted geometry ------
+// Canvas-generated fine-grained bump maps, used in the fragment shader (not an expensive high-poly mesh).
+function fineBump(kind,repeatX=1,repeatY=1){
+ const size=256,canvas=document.createElement('canvas');canvas.width=canvas.height=size;
+ const ctx=canvas.getContext('2d',{alpha:false});ctx.fillStyle='#898989';ctx.fillRect(0,0,size,size);
+ let n=129+kind.length*199;const noise=()=>{n=(Math.imul(n,1664525)+1013904223)>>>0;return n/4294967296;};
+ if(kind==='weave'){
+   for(let i=0;i<size;i+=2){ctx.strokeStyle=i%4?'#969696':'#777';ctx.lineWidth=.65;ctx.beginPath();ctx.moveTo(i,0);ctx.lineTo(i,size);ctx.moveTo(0,i);ctx.lineTo(size,i);ctx.stroke();}
+ }else if(kind==='grain'){
+   for(let i=0;i<650;i++){const y=noise()*size;ctx.strokeStyle=noise()>.52?'#999':'#707070';ctx.lineWidth=.3+noise();ctx.beginPath();ctx.moveTo(0,y);ctx.bezierCurveTo(66,y+noise()*4,190,y-noise()*4,256,y+noise()*2);ctx.stroke();}
+ }else if(kind==='ripple'){
+   for(let y=-20;y<275;y+=5){ctx.strokeStyle='rgba(210,210,210,.35)';ctx.lineWidth=1+noise()*.7;ctx.beginPath();for(let x=0;x<=256;x+=4){const yy=y+Math.sin(x*.056+y*.14)*2.5+Math.cos(x*.15-y*.08);if(x===0)ctx.moveTo(x,yy);else ctx.lineTo(x,yy);}ctx.stroke();}
+ }else{
+   for(let i=0;i<18000;i++){const v=Math.floor(110+noise()*67);ctx.fillStyle=`rgba(${v},${v},${v},.38)`;const x=noise()*256,y=noise()*256,r=.2+noise()*1.1;ctx.fillRect(x,y,r,r);}
+ }
+ const tex=new THREE.CanvasTexture(canvas);tex.wrapS=tex.wrapT=THREE.RepeatWrapping;tex.repeat.set(repeatX,repeatY);tex.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());return tex;
+}
+mats.white.bumpMap=fineBump('plaster',4,4);mats.white.bumpScale=.035;
+mats.cream.bumpMap=mats.white.bumpMap;mats.cream.bumpScale=.022;
+mats.stone.bumpMap=fineBump('aggregate',3,3);mats.stone.bumpScale=.055;
+mats.wood.bumpMap=fineBump('grain',5,8);mats.wood.bumpScale=.018;
+mats.oak.bumpMap=fineBump('grain',6,8);mats.oak.bumpScale=.018;
+mats.linen.bumpMap=fineBump('weave',5,5);mats.linen.bumpScale=.022;
+mats.beige.bumpMap=mats.linen.bumpMap;mats.beige.bumpScale=.018;
+mats.water.bumpMap=fineBump('ripple',9,5);mats.water.bumpScale=.023;
+mats.water.envMapIntensity=1.8;mats.water.roughness=.065;mats.water.opacity=.74;
+mats.glass.envMapIntensity=1.65;mats.glass.clearcoat=1;mats.glass.clearcoatRoughness=.035;mats.glass.ior=1.48;mats.glass.opacity=.27;
+premium.marble.bumpMap=fineBump('aggregate',2,2);premium.marble.bumpScale=.014;
+const matteBlack=mat('#141719',.28,.3),warmLinen=mat('#e7e0d5',.92),brightChrome=mat('#b3b9bc',.18,.83),softClay=mat('#bdb1a0',.88),terracotta=mat('#a37b60',.83),bathTile=mat('#bfc1bb',.44),edgeSeal=mat('#222e36',.72);
+const realFloor=new THREE.MeshStandardMaterial({map:proceduralMap('oak',3,1),color:'#d8b89b',roughness:.47,metalness:.02,bumpMap:fineBump('grain',8,1),bumpScale:.012});
+const woodTrim=new THREE.MeshStandardMaterial({map:proceduralMap('wood',1,5),color:'#9f8463',roughness:.44,bumpMap:fineBump('grain',1,5),bumpScale:.024});
+// Rounded edges are essential: cut stone, upholstery, tabletops and furniture no longer look like sharp cubes.
+function rounded(name,x,y,z,w,h,d,r,material,parent=scene){
+ const maxR=Math.min(w,h,d)*.45;const geo=new RoundedBoxGeometry(w,h,d,3,Math.min(r,maxR));
+ const mesh=new THREE.Mesh(geo,material);mesh.name=name;mesh.position.set(x,y,z);mesh.castShadow=true;mesh.receiveShadow=true;parent.add(mesh);return mesh;
+}
+function tube(name,coords,r,material,parent=scene){
+ const points=coords.map(p=>new THREE.Vector3(...p)),curve=new THREE.CatmullRomCurve3(points);
+ const mesh=new THREE.Mesh(new THREE.TubeGeometry(curve,Math.max(12,points.length*7),r,7,false),material);mesh.name=name;mesh.castShadow=true;mesh.receiveShadow=true;parent.add(mesh);return mesh;
+}
+function panelDecal(name,x,y,z,w,h,d,m,parent=scene){return box(name,x,y,z,w,h,d,m,parent,false,false)}
+function addPlankFloor(parent,y,xMin,xMax,zMin,zMax){
+ const countX=Math.round((xMax-xMin)/1.67),countZ=Math.round((zMax-zMin)/.26);
+ const geo=new THREE.BoxGeometry((xMax-xMin)/countX-.027,.026,(zMax-zMin)/countZ-.014);
+ const instanced=new THREE.InstancedMesh(geo,realFloor,countX*countZ);const q=new THREE.Object3D();
+ const c=new THREE.Color();let i=0;for(let z=0;z<countZ;z++)for(let x=0;x<countX;x++){
+  const shifted=z%2===0?0:.27;
+  q.position.set(xMin+(x+.5)*(xMax-xMin)/countX+(x===countX-1?0:shifted),y,zMin+(z+.5)*(zMax-zMin)/countZ);
+  q.updateMatrix();instanced.setMatrixAt(i,q.matrix);c.setHSL(.087,.16,.66+Math.sin(i*3.12)*.045);instanced.setColorAt(i,c);i++;
+ }
+ instanced.instanceMatrix.needsUpdate=true;instanced.castShadow=false;instanced.receiveShadow=true;instanced.name='Individual hardwood planks';parent.add(instanced);
+}
+addPlankFloor(first,.716,-8.85,8.85,-6.02,5.98);addPlankFloor(second,4.774,-8.85,8.85,-6.02,5.98);
+// Properly jointed stone veneer on visible corners, with a darker mortar line and slight surface depth.
+const stoneBatchGeo=new THREE.BoxGeometry(.95,.235,.084),stoneBatch=new THREE.InstancedMesh(stoneBatchGeo,mats.stone,200);
+let ns=0;const stoneObj=new THREE.Object3D();
+for(let iy=0;iy<14;iy++)for(let ix=0;ix<7;ix++){
+ const stagger=iy%2===0?0:.4;const xx=2.9+ix*.94+stagger;
+ if(xx>9.15)continue;
+ stoneObj.position.set(xx,.82+iy*.232,-6.355);stoneObj.updateMatrix();stoneBatch.setMatrixAt(ns++,stoneObj.matrix);
+}
+stoneBatch.count=ns;stoneBatch.castShadow=true;stoneBatch.receiveShadow=true;stoneBatch.instanceMatrix.needsUpdate=true;stoneBatch.name='Mortared individual natural stone blocks';scene.add(stoneBatch);
+// Door architectural details: bronze pull, recessed keyhole, threshold, doorbell and intercom.
+rounded('Brushed brass entry handle',-1.38,2.03,6.585,.09,.89,.09,.03,premium.bronze,first);
+rounded('Keyhole lock',-1.39,1.51,6.603,.065,.15,.05,.025,matteBlack,first);
+rounded('Entry threshold',-2,.70,6.52,1.95,.08,.51,.025,premium.marble,first);
+rounded('Smart video doorbell',-.49,2.1,6.54,.13,.29,.07,.035,mats.frame,first);
+sphere('Door camera',-.49,2.15,6.585,.033,brightChrome,first,10);
+// Frames and seals at each floor-level: thin independent rubber gaskets plus realistic reflective mullions.
+for(const y of [1.35,3.83,5.05,7.91])for(let x=-8.85;x<=8.85;x+=2.98){
+ panelDecal('Glazing horizontal seal',x+1.40,y,6.17,2.76,.021,.037,edgeSeal,scene);
+}
+for(let x=-8.92;x<9.0;x+=.74){
+ panelDecal('Continuous foundation plinth',x,.72,6.37,.70,.13,.075,mats.stone);
+ panelDecal('Waterproof reveal trim',x,4.45,6.36,.69,.075,.065,premium.bronze);
+}
+// Exterior solar-shading louvers and their visible structural fasteners.
+for(let x=-8.8;x<-5.9;x+=.34){
+ for(let y of [5.34,6.45,7.56])sphere('Louver screw cap',x,y,6.53,.031,mats.metal,scene,6);
+}
+for(let z=-5.8;z<=6;z+=.65)box('Side shaded privacy louver',9.47,6.4,z,.18,2.45,.11,woodTrim);
+// Stainless glazing and balcony rail feet, with a visible handrail.
+for(let x=1.05;x<9.3;x+=1.45){
+ rounded('Balcony steel standoff',x,4.82,8.56,.11,.17,.18,.025,brightChrome);
+ rounded('Balcony fastener plate',x,4.69,8.59,.22,.055,.24,.02,premium.bronze);
+}
+// Recessed exterior garage door, slats, address plaque and warm downlighting.
+rounded('House number plaque',-3.8,2.35,6.71,.54,.43,.05,.03,mats.graphite,first);
+for(let i=0;i<3;i++)box('Address plaque silver line',-3.89+i*.10,2.35,6.75,.045,.22,.012,brightChrome,first,false);
+for(let i=0;i<11;i++)box('Carport slotted drain',-14,.19,6.2-i*.045,7,.023,.023,mats.frame,scene,false);
+// Water feature with clean-edged underwater ripples, lily-like floating leaves and steel steps.
+const waterRings=[];
+for(let i=0;i<9;i++){
+ const x=1.7+(i*1.9%11),z=14.1+(i*1.3%5);
+ const mesh=new THREE.Mesh(new THREE.RingGeometry(.25,.265,40),new THREE.MeshBasicMaterial({color:'#d7ffff',transparent:true,opacity:.14,side:THREE.DoubleSide,depthWrite:false}));
+ mesh.name='Animated water ripple';mesh.rotation.x=-Math.PI/2;mesh.position.set(x,.223,z);mesh.userData.ripplePhase=i*.64;scene.add(mesh);waterRings.push(mesh);
+}
+for(let i=0;i<4;i++){
+ const z=14.1+i*.42;
+ rounded('Pool stainless ladder tread',13.74,.22+i*.17,z,.38,.036,.15,.016,brightChrome);
+}
+// Dining room: ceramic plates, linen runners, glassware and metal cutlery with actual thickness.
+rounded('Linen table runner',-5.05,1.679,-3.3,3.4,.021,.37,.01,softClay,first);
+for(let x of [-6.3,-5.1,-3.9])for(let z of [-3.78,-2.81]){
+ cyl('Porcelain dinner plate',x,1.69,z,.27,.27,.027,mats.white,24,first);
+ cyl('Soup bowl',x,1.745,z,.145,.18,.088,mats.white,20,first);
+ rounded('Cutlery',x+.31,1.69,z,.026,.014,.26,.004,brightChrome,first);
+ cyl('Drinking glass',x-.26,1.76,z-.17,.062,.07,.16,mats.glass,14,first);
+}
+// Living room: layered soft upholstery, stitching, open book, rug tufts and photo frames.
+for(const x of [3.1,3.95,4.8,5.65])rounded('Tailored sofa seat cushion',x,1.19,2.60,.76,.18,1.07,.095,warmLinen,first);
+for(const x of [3.14,4.02,4.90,5.71])rounded('Piped soft sofa back cushion',x,1.61,2.06,.76,.61,.22,.10,softClay,first);
+for(let i=0;i<7;i++){
+ rounded('Lightweight coffee-table magazine',3.68,1.51+i*.012,1.19,.64,.014,.42,.007,[warmLinen,premium.accent,mats.cream][i%3],first);
+}
+for(let i=0;i<3;i++){
+ const x=1.8+i*2.1;
+ rounded('Glass-mounted abstract print',x,2.65,-.005,.94,1.2,.028,.013,mats.frame,first);
+}
+// Dining area tall floor sculpture and fabric pendant shades.
+const hanging=[];
+for(let x of [-6.4,-5.05,-3.7]){
+ tube('Pendant cable',[[x,4.05,-3.3],[x,3.38,-3.3]],.018,mats.black,first);
+ const shade=new THREE.Mesh(new THREE.CylinderGeometry(.22,.44,.38,28,1,true),mats.white);shade.name='Sculpted pendant lamp shade';shade.position.set(x,3.24,-3.3);first.add(shade);
+ const bulb=sphere('Warm frosted LED bulb',x,3.0,-3.3,.11,premium.light,first,14);hanging.push(bulb);
+ light(x,2.88,-3.3,.42,5);
+}
+// Bathrooms: real sinks, a shower, a glass divider, towel rails and mirrors (not stock photos).
+const bathroom=group('Luxury upstairs bathroom');bathroom.position.set(-6.9,4.76,-3.8);
+rounded('Freestanding ceramic bathtub',0,.71,0,2.65,.84,1.24,.25,mats.white,bathroom);
+rounded('Bathtub inner water',0,1.14,0,2.30,.022,.98,.18,mats.water,bathroom);
+rounded('Bathroom vanity floating cabinet',2.14,.55,-1.24,1.35,.62,.68,.10,mats.oak,bathroom);
+rounded('Countertop vessel basin',2.14,.99,-1.24,.92,.24,.46,.10,mats.white,bathroom);
+tube('Bath basin wall tap',[[2.10,1.38,-1.56],[2.10,1.43,-1.25],[2.10,1.25,-1.20]],.035,brightChrome,bathroom);
+rounded('Bathroom anti-fog mirror',2.14,2.02,-1.58,1.16,1.12,.04,.07,mat('#92a7ad',.14,.46),bathroom);
+rounded('Walk-in shower glass panel',-1.72,1.52,-1.10,.045,2.53,1.95,.014,mats.glass,bathroom);
+tube('Rainfall shower arm',[[-2.14,2.66,-1.37],[-2.14,2.66,-.55]],.044,brightChrome,bathroom);
+cyl('Rainfall shower head',-2.14,2.51,-.55,.25,.25,.075,brightChrome,24,bathroom);
+rounded('Bathroom folded bath towels',1.65,.89,-.33,.80,.16,.36,.06,warmLinen,bathroom);
+// High-detail master bedroom with headboard upholstery and padded cushions.
+for(let i=0;i<11;i++){
+ rounded('Headboard vertical upholstered channel',2.90+i*.27,5.92,-.54,.24,1.30,.17,.065,softClay,second);
+}
+for(let i=0;i<2;i++){
+ rounded('Master bed pillow',3.46+i*1.58,5.75,1.95,1.08,.22,.62,.105,mats.white,second);
+ rounded('Layered throw pillow',3.74+i*1.12,5.97,2.02,.42,.30,.36,.10,premium.accent,second);
+}
+// Ceiling beams and two suspended design chandeliers with diffusers.
+for(let z of [-4.6,-3.4,-1.4,1,3.6]){
+ rounded('Recessed timber ceiling beam',-3.4,8.08,z,3.65,.14,.10,.025,woodTrim,second);
+}
+for(let x of [-5.8,4.5]){
+ tube('Pendant suspension cable',[[x,8.25,3.2],[x,7.38,3.2]],.014,mats.black,second);
+ const ring=new THREE.Mesh(new THREE.TorusGeometry(.49,.052,10,40),premium.bronze);ring.position.set(x,7.24,3.2);ring.rotation.x=Math.PI/2;ring.name='Designer pendant chandelier';second.add(ring);
+ const bulb=new THREE.Mesh(new THREE.TorusGeometry(.44,.026,8,40),premium.light);bulb.position.copy(ring.position);bulb.rotation.copy(ring.rotation);bulb.name='Diffused chandelier light';second.add(bulb);
+ light(x,7.0,3.2,.48,6);
+}
+// Realistic planted courtyard and gentle architectural contact shadows.
+function shadowBlob(name,x,z,sx,sz,opacity){
+ const canvas=document.createElement('canvas');canvas.width=canvas.height=128;const ctx=canvas.getContext('2d');
+ const g=ctx.createRadialGradient(64,64,1,64,64,63);g.addColorStop(0,`rgba(0,0,0,${opacity})`);g.addColorStop(.6,`rgba(0,0,0,${opacity*.40})`);g.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=g;ctx.fillRect(0,0,128,128);
+ const tex=new THREE.CanvasTexture(canvas),plane=new THREE.Mesh(new THREE.PlaneGeometry(sx,sz),new THREE.MeshBasicMaterial({map:tex,transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-1}));
+ plane.rotation.x=-Math.PI/2;plane.position.set(x,.198,z);plane.name=name;scene.add(plane);return plane;
+}
+shadowBlob('Contact shadow under car',-14,-.5,4.0,6.0,.34);
+shadowBlob('Contact shadow below outdoor seating',18.4,21,4.0,3.3,.2);
+for(const [x,z] of [[-19,9],[-13,23],[17,27]])shadowBlob('Soft natural tree contact shadow',x,z,5,5,.2);
+// Warm cinematic window interiors remain readable at dusk, without a glowing opaque wall.
+for(let x of [-7.9,-5.5,2.4,5.4]){
+ box('Soft indirect interior cove',x,3.97,4.45,1.3,.035,.055,premium.light,first,false,false);
+ box('Upper indirect cove',x,8.01,4.45,1.35,.034,.055,premium.light,second,false,false);
+}
+// Keep geometry organized; interactive orbit and WASD use the same original navigable house bounds.
+
 // toggles (roof and upper floor have different visibility so ground floor remains visible)
 function setCut(flag){cut=flag;for(let p of roofParts)p.visible=!flag;for(let p of facadeParts)p.material=mats.glass;pseudoCut();$('#cutaway').classList.toggle('active',cut);} 
 function pseudoCut(){// Roof, slabs and front glazing are hidden in cutaway; structural 3D interior remains visible.
  upperSlab.visible=!(cut&&!floor2);second.visible=!(cut&&!floor2);for(let p of facadeParts)p.visible=!(cut&&mode==='orbit');}
-function setNight(flag){night=flag;scene.background=new THREE.Color(flag?'#10162d':'#95bedc');scene.fog.color.set(flag?'#19243b':'#b6c7ce');sun.intensity=flag?.21:3.2;hemi.intensity=flag?.84:2.5;ambient.intensity=flag?.15:.30;renderer.toneMappingExposure=flag?1.0:1.33;for(let l of lampLights)l.intensity=l.userData.initialIntensity??(l.userData.initialIntensity=l.intensity),l.intensity=(l.userData.initialIntensity)*(flag?1.95:.48);$('#daynight').innerHTML=flag?'☀️ Kunduz':'☾ Tun';$('#daynight').classList.toggle('active',flag);}
+function setNight(flag){night=flag;scene.background=new THREE.Color(flag?'#10162d':'#95bedc');scene.fog.color.set(flag?'#19243b':'#b6c7ce');sun.intensity=flag?.21:3.2;hemi.intensity=flag?.84:2.5;ambient.intensity=flag?.15:.30;renderer.toneMappingExposure=flag?.89:1.21;for(let l of lampLights)l.intensity=l.userData.initialIntensity??(l.userData.initialIntensity=l.intensity),l.intensity=(l.userData.initialIntensity)*(flag?1.95:.48);$('#daynight').innerHTML=flag?'☀️ Kunduz':'☾ Tun';$('#daynight').classList.toggle('active',flag);}
 setNight(false);
 const views={outside:{pos:[29,15,33],look:[0,3,0],floor:1},aerial:{pos:[1,43,26],look:[0,0,2],floor:1},pool:{pos:[10,6,26],look:[3,2,3],floor:1},living:{pos:[3.2,2.1,4.4],look:[3.8,2.1,-3],floor:1},kitchen:{pos:[5.8,2.1,-2.15],look:[3.7,1.5,-5.5],floor:1},bed1:{pos:[-5.7,2.0,4.5],look:[-5.2,1.3,1.2],floor:1},bed2:{pos:[4.2,6.08,3.9],look:[4,5.7,.2],floor:2}};
 let yaw=0, pitch=0,walkY=2.05;renderer.domElement.style.cursor='grab';
@@ -443,7 +625,9 @@ function resize(){camera.aspect=innerWidth/innerHeight;camera.updateProjectionMa
 let last=performance.now();function render(t){requestAnimationFrame(render);const dt=Math.min((t-last)/1000,.075);last=t;
  if(transition){transition.t=Math.min(1,transition.t+dt*.95);const u=1-Math.pow(1-transition.t,3);camera.position.lerpVectors(transition.fromPos,transition.toPos,u);orbit.target.lerpVectors(transition.fromTarget,transition.toTarget,u);if(transition.t>=1)transition=null;}
  if(mode==='orbit'){orbit.update();}else{stepMove(dt);camera.position.y+=(walkY-camera.position.y)*Math.min(1,dt*10);camera.rotation.order='YXZ';camera.rotation.set(pitch,yaw,0);}
- const time=t*.001;poolWater.material.roughness=.13+.045*Math.sin(time*1.4);poolWater.position.y=.188+Math.sin(time*1.15)*.007;
+ const time=t*.001;poolWater.material.roughness=.07+.018*Math.sin(time*1.4);poolWater.position.y=.188+Math.sin(time*1.15)*.007;
+ if(mats.water.bumpMap){mats.water.bumpMap.offset.x=(time*.012)%1;mats.water.bumpMap.offset.y=(time*.007)%1;}
+ for(const r of waterRings){const sc=.75+((time*.32+r.userData.ripplePhase)%1.45);r.scale.set(sc,sc,sc);r.material.opacity=Math.max(0,.20*(1-(sc-.75)/1.45));}
  renderer.render(scene,camera);
 }
 requestAnimationFrame(render);
