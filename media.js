@@ -20,10 +20,30 @@ export function propertyImages(property, baseUrl) {
     .filter((url, index, all) => all.indexOf(url) === index);
 }
 
+// Bektemir konsept uyining xona rasmlari (assets/residence/gallery) boshqa namunaviy e’lonlarda ham ko‘rsatiladi.
+const ROOM_LABELS = {
+  living: 'Mehmonxona', kitchen: 'Oshxona', bed1: '1-qavat yotoqxona',
+  bed2: '2-qavat yotoqxona', bath: 'Hammom', pool: 'Basseyn',
+};
+
+function roomViewsFor(listing) {
+  const category = listing.category;
+  if (category === 'Yer uchastkalari') return [];
+  if (category === 'Tijorat obyektlari') return ['living', 'kitchen', 'bath'];
+  if (category === 'Kvartiralar') return Number(listing.rooms) > 1 ? ['living', 'kitchen', 'bed1', 'bath'] : ['living', 'kitchen', 'bath'];
+  if (category === 'Villalar') return ['living', 'kitchen', 'bed1', 'bed2', 'bath', 'pool'];
+  return ['living', 'kitchen', 'bed1', 'bed2', 'bath'];
+}
+
 export function assignDemoPhotos(listings) {
   for (const listing of listings) {
     listing.photo = `listings/${String(listing.id).padStart(2, '0')}.webp`;
-    listing.gallery = [listing.photo];
+    const rooms = roomViewsFor(listing);
+    listing.gallery = [listing.photo, ...rooms.map(view => `residence/gallery/${view}.webp`)];
+    if (rooms.length) {
+      listing.galleryLabels = ['Asosiy ko‘rinish', ...rooms.map(view => ROOM_LABELS[view])];
+      listing.galleryNote = 'Xona rasmlari konsept 3D modeldan (namuna)';
+    }
     delete listing.tour;
   }
 }
