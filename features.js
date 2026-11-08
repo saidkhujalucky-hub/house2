@@ -1,4 +1,4 @@
-import { propertyImages } from './media.js?v=20261108-gallery';
+import { propertyImages } from './media.js?v=20261108-fix2';
 
 export function mountMarket(ctx){
   const {api,state,houses,root,render,navigate,toast,esc,photoTag}=ctx;
