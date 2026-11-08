@@ -66,3 +66,8 @@ frontend/
 ```
 
 **Backendga birorta ham o‘zgartirish kiritilmagan.**
+
+
+## Premium va yangi workflow
+
+Frontendga e’lon joylash, foto yuklash, sevimlilarni serverda saqlash, xabar yuborish va sotuvchining kelgan xabarlari uchun API integratsiyasi qo‘shilgan. Ular NestJS backendidagi yangi /properties va /favorites endpointlari ishga tushganda haqiqiy ishlaydi. GitHub Pages o‘zi backend vazifasini bajarmaydi. 3D sahifa va barcha mavjud login/kategoriya imkoniyatlari saqlangan.

@@ -1,6 +1,8 @@
 import { api } from './api.js';
+import { mountMarket } from './features.js';
 
 const root = document.getElementById('app');
+let market;
 const TOKEN_KEY = 'marketplace-front-jwt';
 const FAV_KEY = 'marketplace-front-demo-favorites';
 const ASSET = './assets/';
@@ -90,7 +92,7 @@ const PHOTO_URLS = Object.freeze({
   'living-room.webp': 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1600&q=90',
   'house-night.webp': 'https://images.unsplash.com/photo-1600585154526-990dced4db0d?auto=format&fit=crop&w=1600&q=90',
 });
-const source = file => PHOTO_URLS[file] || ASSET + file;
+const source = file => /^https?:\/\//i.test(String(file)) ? file : PHOTO_URLS[file] || ASSET + file;
 const photoTag = (file, alt, cls='', loading='lazy') => {
   const backup = ASSET + String(file).replace(/[^a-z0-9.-]/gi, '');
   return `<img class="${cls}" src="${source(file)}" alt="${esc(alt)}" loading="${loading}" decoding="async" onerror="if(!this.dataset.fallback){this.dataset.fallback='1';this.src='${backup}'}" />`;
@@ -146,7 +148,7 @@ function aboutPage(){return `<main class="container inside-page">${pageBanner('M
 function notFound(){return `<main class="container inside-page"><div class="empty-state">${I('search',45)}<h2>Sahifa topilmadi</h2><p>Qidirgan sahifangiz mavjud emas.</p><a class="btn btn-primary" href="#/">Bosh sahifa</a></div></main>`;}
 function render(){const r=route();const p=r.path;const current=p==='/'?'home':p.includes('/property/')?'detail':p.split('/')[1];let body;
  if(p==='/')body=homePage();else if(p==='/categories')body=categoriesPage();else if(p==='/listings')body=listingPage(r.query);else if(p.startsWith('/property/'))body=detailPage(p.split('/')[2]);else if(p==='/favorites')body=favPage();else if(p==='/login'||p==='/register')body=authPage(p.slice(1));else if(p==='/profile')body=profilePage();else if(p==='/admin')body=adminPage();else if(p==='/add-listing')body=addPage();else if(p==='/about')body=aboutPage();else body=notFound();
- root.innerHTML=`${navbar(current)}${body}${footer()}`;
+ root.innerHTML=`${navbar(current)}${body}${footer()}`;if(market)market.afterRender();
  document.title=`${p==='/'?'Orzuingizdagi uyni toping':({'/listings':'E’lonlar','/categories':'Kategoriyalar','/profile':'Mening profilim','/admin':'Admin panel','/favorites':'Sevimlilar'}[p]||'MarketPlace')} • MarketPlace`;
 }
 async function loadCategories(){try{const result=await api.categories();if(!Array.isArray(result))throw Error('Kategoriya ro‘yxati kutilgan formatda emas');state.categories=result;state.catStatus='ok';state.catError='';}catch(e){state.categories=[];state.catStatus='error';state.catError=e.message;} render();}
@@ -205,6 +207,8 @@ function onRouteChange(){state.galleryIndex=0;state.detailTab='about';state.menu
 window.addEventListener('hashchange',onRouteChange);
 root.addEventListener('click',clickHandler);
 root.addEventListener('submit',submitHandler);
+market=mountMarket({api,state,houses,root,render,navigate,toast,esc,photoTag});
 render();
 loadCategories();
 loadUser();
+market.init();

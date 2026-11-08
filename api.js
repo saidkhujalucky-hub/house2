@@ -44,4 +44,20 @@ export const api = {
   addCategory: (token, body) => request('/categories', { method: 'POST', token, body }),
   editCategory: (token, id, body) => request(`/categories/${encodeURIComponent(id)}`, { method: 'PATCH', token, body }),
   deleteCategory: (token, id) => request(`/categories/${encodeURIComponent(id)}`, { method: 'DELETE', token }),
+  properties: (params={}) => request('/properties?'+new URLSearchParams(params)),
+  myProperties: token => request('/properties/mine',{token}),
+  createProperty: (token,body) => request('/properties',{method:'POST',token,body}),
+  deleteProperty: (token,id) => request('/properties/'+encodeURIComponent(id),{method:'DELETE',token}),
+  getFavorites: token => request('/favorites',{token}),
+  addFavorite: (token,id) => request('/favorites/'+encodeURIComponent(id),{method:'POST',token}),
+  removeFavorite: (token,id) => request('/favorites/'+encodeURIComponent(id),{method:'DELETE',token}),
+  inquiries: token => request('/properties/inquiries/received',{token}),
+  sendInquiry: (token,id,body) => request('/properties/'+encodeURIComponent(id)+'/inquiries',{method:'POST',token,body}),
+  uploadImages: async (token,id,body) => {
+    const response=await fetch(API_BASE_URL+'/properties/'+encodeURIComponent(id)+'/images',{method:'POST',headers:{Authorization:'Bearer '+token},body});
+    const result=await response.json().catch(()=>null);
+    if(!response.ok)throw new ApiError(Array.isArray(result?.message)?result.message.join(' • '):(result?.message||'Rasm yuklash xatosi'),response.status);
+    return result;
+  },
+
 };
