@@ -1,9 +1,11 @@
+import { propertyImages, hasTour } from './media.js';
+
 export function mountMarket(ctx){
   const {api,state,houses,root,render,navigate,toast,esc,photoTag}=ctx;
   let live=false, lastToken='', my=[], inbox=[], fetching=false;
   const normalize=p=>{
-    const pics=(p.images||[]).map(x=>/^\/properties\/uploads\/[a-z0-9-]+\.(jpg|png|webp)$/i.test(x.url)?api.baseUrl+x.url:/^https?:\/\/[^"'<> ]+$/i.test(x.url)?x.url:'hero-villa.webp');
-    return {id:Number(p.id),title:p.title,description:p.description,price:Number(p.price),type:p.listingType,city:p.city,district:p.address,category:p.category?.name||'',rooms:p.rooms,area:p.area,bathrooms:p.bathrooms,photo:pics[0]||'hero-villa.webp',gallery:pics.length?pics:['hero-villa.webp'],ownerId:p.ownerId,real:true,status:p.status};
+    const pics=propertyImages(p,api.baseUrl);
+    return {id:Number(p.id),title:p.title,description:p.description,price:Number(p.price),type:p.listingType,city:p.city,district:p.address,category:p.category?.name||'',rooms:p.rooms,area:p.area,bathrooms:p.bathrooms,photo:pics[0]||null,gallery:pics,ownerId:p.ownerId,real:true,status:p.status};
   };
   async function refresh(){
     try{const r=await api.properties({limit:100});const a=Array.isArray(r)?r:r.items;if(!Array.isArray(a))throw Error('Bad API');state.propertyApi='online';if(a.length){houses.splice(0,houses.length,...a.map(normalize));live=true;}render();}
@@ -42,7 +44,8 @@ export function mountMarket(ctx){
     if(main&&path==='#/inbox')main.outerHTML=inboxPage();
     const nav=root.querySelector('.header-actions');
     if(nav&&!nav.querySelector('.publish-link'))nav.insertAdjacentHTML('afterbegin','<a class="btn btn-primary btn-sm publish-link" href="#/add-listing">+ E’lon berish</a>');
-    if(nav&&!nav.querySelector('.tour-link'))nav.insertAdjacentHTML('afterbegin','<a class="btn btn-outline btn-sm tour-link" href="./premium-house.html" target="_blank" rel="noopener noreferrer">◈ 3D uy</a>');
+    const tourHouse=houses.find(hasTour);
+    if(nav&&tourHouse&&!nav.querySelector('.tour-link'))nav.insertAdjacentHTML('afterbegin','<button type="button" class="btn btn-outline btn-sm tour-link" data-tour-id="'+tourHouse.id+'">◈ 3D uy</button>');
     const side=root.querySelector('.side-links');
     if(side){const a=side.querySelector('a[href="#/add-listing"]');if(a){a.href='#/my-listings';a.innerHTML='Mening e’lonlarim';}if(!side.querySelector('a[href="#/inbox"]'))side.insertAdjacentHTML('beforeend','<a href="#/inbox">✉ Kelgan xabarlar</a>');}
     if(live)root.querySelectorAll('.demo-note,.tiny-demo-tag').forEach(x=>x.remove());
@@ -98,3 +101,4 @@ export function mountMarket(ctx){
   window.addEventListener('hashchange',loadPage);
   return {init(){refresh();loadPage();},afterRender};
 }
+

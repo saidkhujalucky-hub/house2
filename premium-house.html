@@ -31,6 +31,7 @@
 .quality{display:flex;align-items:center;gap:9px;padding:10px 13px;border-radius:13px;font-size:11px;color:#c6c6da;pointer-events:auto}.quality select{background:#22253b;color:#f6f2ff;border:1px solid #57516d;border-radius:8px;padding:6px;font:inherit;cursor:pointer}.headline{top:114px;max-width:390px}.headline h1{font-size:clamp(24px,2.6vw,38px);letter-spacing:-1.3px}.headline .note{max-width:330px}.rightbar{width:213px;top:122px;padding:14px}.room-btn{font-size:11px;padding:8px}.controls{max-width:calc(100% - 24px);gap:3px;padding:8px}.control-btn{padding:8px 11px;min-height:42px}.hint{font-size:10px;bottom:104px;background:#12182bd9}.walk-hud{font-size:10px;top:112px}.walk-hud #walk-location{color:#e9ccff;padding:3px 7px;border-radius:5px;background:#ffffff11}.walking .headline,.walking .hint{display:none}.walking .rightbar{opacity:.86}.walking #scene canvas{cursor:crosshair}#door-hint{position:absolute;z-index:8;left:50%;top:62%;transform:translateX(-50%);padding:10px 15px;border-radius:12px;font-size:11px;background:#101725dd;border:1px solid #b59ade77;pointer-events:none}#door-hint[hidden]{display:none}#exit-photo{display:none;position:absolute;right:18px;bottom:18px;z-index:12;padding:10px 15px;border-radius:12px;color:#fff;font-size:11px}.photo-mode .header,.photo-mode .headline,.photo-mode .rightbar,.photo-mode .hint,.photo-mode .controls,.photo-mode .zoom,.photo-mode .walk-hud,.photo-mode #mobile-nav,.photo-mode #vignette,.photo-mode .crosshair,.photo-mode #door-hint{display:none!important}.photo-mode #exit-photo{display:block}#vignette{background:linear-gradient(180deg,#070b1d6b,transparent 16%,transparent 83%,#080b1d52)}#webgl-error button{color:#fff;margin-right:12px}.loader-inner{max-width:380px}
 @media(max-width:1050px){.rightbar{top:116px;bottom:auto;right:15px;width:185px}.headline{top:109px}.controls{width:max-content}.control-btn{font-size:10px;padding:8px}.walk-hud{top:105px}}
 @media(max-width:700px){.quality{padding:5px 7px;gap:5px}.quality>span{display:none}.quality select{font-size:10px;padding:5px}.back{padding:10px 8px}.header-right{gap:5px}.headline{top:87px;left:15px}.headline h1{font-size:25px}.headline p{font-size:9px}.rightbar{top:auto;bottom:118px;left:9px;right:9px;width:auto;padding:5px}.room-btn{font-size:9px;padding:5px}.room-symbol{width:22px;height:22px}.controls{width:auto;max-width:none;bottom:9px;padding:4px}.control-btn{font-size:9px;min-height:36px;padding:7px 8px}.zoom{bottom:178px;right:12px}.walk-hud{top:75px;left:10px;font-size:9px;gap:6px;max-width:calc(100% - 20px)}.walk-hud span:last-child{line-height:1.6}#mobile-nav{left:12px;bottom:178px}.walking .rightbar{bottom:113px}.walking .room-btn{padding:6px}.compact #mobile-nav{bottom:95px}}
+.embedded-tour .brand,.embedded-tour .headline,.embedded-tour .header-right>a.back{display:none}.embedded-tour .header{justify-content:flex-end;top:8px;height:58px}.embedded-tour .rightbar{top:80px}.embedded-tour .walk-hud{top:73px}@media(max-width:700px){.embedded-tour .rightbar{top:auto}.embedded-tour .header-right{gap:5px}.embedded-tour .header{left:8px;right:8px}.embedded-tour .controls{max-width:calc(100% - 12px)}}
 </style>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.1/examples/jsm/"}}</script>
 </head>
@@ -51,11 +52,24 @@ https://polyhaven.com/a/concrete_floor_worn_001 · https://polyhaven.com/a/aeria
 https://polyhaven.com/a/kloppenheim_06_puresky · Three.js r160.1 MIT.
 All architecture, furniture, planting and vehicle geometry is created in code for this tour. -->
 <script>
+const embeddedTour = new URLSearchParams(location.search).has('embed') && window.parent !== window;
+if (embeddedTour) {
+  document.body.classList.add('embedded-tour');
+  const closeTour = () => window.parent.postMessage({type:'marketplace:close-tour'},location.origin);
+  document.querySelectorAll('a[href]').forEach(link => {
+    link.addEventListener('click',event => {event.preventDefault();closeTour();});
+    if (link.classList.contains('back')) link.textContent = '← E’longa qaytish';
+  });
+  document.addEventListener('keydown',event => {
+    if (event.key === 'Escape' && !document.pointerLockElement) {event.preventDefault();closeTour();}
+  },true);
+}
 function showFailure(message){window.sceneFailed=true;const load=document.querySelector('#loading');if(load)load.style.display='none';const error=document.querySelector('#webgl-error');if(error)error.style.display='flex';if(message)document.querySelector('#failure-message').textContent=message;}
 window.addEventListener('error',e=>{if(document.querySelector('#loading')&&!window.sceneFailed)showFailure('3D sahna yuklanmadi. Internet ulanishini va brauzerdagi grafik tezlashtirishni tekshirib, qayta yuklang.');});
 window.addEventListener('unhandledrejection',()=>{if(document.querySelector('#loading')&&!window.sceneFailed)showFailure('3D sahna yuklanmadi. Internet ulanishini tekshiring va sahifani yangilang.');});
 setTimeout(()=>{if(!document.querySelector('#scene canvas'))showFailure('3D kutubxona yuklanmadi. Internet ulanishini tekshiring va qayta yuklang.');},30000);
 </script>
-<script type="module" src="./assets/residence/scene.js"></script>
+<script type="module" src="./assets/residence/scene.js?v=20261108-media"></script>
 </body>
 </html>
+

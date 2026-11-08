@@ -79,3 +79,13 @@ Frontendga e’lon joylash, foto yuklash, sevimlilarni serverda saqlash, xabar y
 - Namuna uyda boshqa uylarning bir nechta fotosi ko‘rsatilmaydi: har bir demo obyektning o‘ziga biriktirilgan bitta bosh rasmi bor. Real e’lonlarda backenddagi propertyId bo‘yicha bog‘langan galereya ishlaydi.
 - Katalog 12 tadan ko‘rsatadi, "Yana ko‘rish" qo‘shimcha kartalarni ochadi; bosh sahifada 8 ta ko‘rsatiladi.
 - Unsplash fotosuratlarida responsive o‘lcham/siqish, native lazy-loading; thumbnail va kartalar ancha kichikroq fayl oladi. 3D iframe avtomatik tez grafik rejimida ochiladi (standalone yuqori sifatda qoladi).
+
+## E’lon rasmlari va ichki 3D oyna
+
+- 20 ta demo e’lonning alohida fotosi `assets/listings/01.webp`–`20.webp` da saqlanadi. Har bir suratning 720px kartochka va 1600px batafsil versiyasi bor. Manbalar `assets/listings/SOURCES.json` da.
+- Kartochka va e’lon galereyasi bitta e’lon IDsi bo‘yicha aynan bir suratdan foydalanadi. Rasmsiz yoki yuklanmagan rasmli e’lon uchun neytral placeholder chiqadi.
+- Haqiqiy API galereyasi boshqa `propertyId` ga tegishli rasmlarni tashlab yuboradi va suratlarni `sortOrder` bo‘yicha tartiblaydi.
+- Bektemir uyining mavjud 3D konsepti barcha kirish tugmalaridan sahifa ichidagi dialogda ochiladi. Model faqat tugma bosilganda yuklanadi; yopilganda iframe o‘chiriladi. Katalog filtrlari va ko‘rsatilgan e’lonlar soni saqlanadi.
+- 3D ichidagi «E’longa qaytish» dialogni yopadi. Yangi tab ochilmaydi va asosiy sahifa manzili o‘zgarmaydi.
+- Mahalliy tekshiruvlarda rasm bog‘lanishi, bo‘sh galereya, tartiblash, turli ID rasmlari, dialogni ochish/yopish va iframe tozalash tekshirildi. Tekshiruv brauzerida WebGL mavjud emasligi sababli modelning grafik renderi tekshirilmagan.
+

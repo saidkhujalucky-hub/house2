@@ -778,4 +778,5 @@ $('#load-detail').textContent='Uy sayohatga tayyor';
 renderer.compile(scene,camera);renderer.shadowMap.needsUpdate=true;renderer.render(scene,camera);lightingDirty=false;
 setQuality(quality);
  $('#loading').style.opacity='0';setTimeout(()=>$('#loading')?.remove(),650);requestAnimationFrame(render);
-if(new URLSearchParams(location.search).has('embed'))document.body.classList.add('compact');
+if(embedded&&!new URLSearchParams(location.search).has('expanded'))document.body.classList.add('compact');
+
