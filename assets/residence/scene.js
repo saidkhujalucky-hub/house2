@@ -199,10 +199,10 @@ wall('Master corridor wall',.58,3.9,.16,4.3,1,M.plaster);
 wall('Master corridor rear',.58,-3.45,.16,5.3,1,M.plaster);
 box('Master doorway lintel',.58,UPPER+2.78,.94,.16,.68,1.30,M.plaster,upperFloor);
 // Upper floor slabs surround the actual staircase void.
-for(const [x,z,w,d] of [[-5.78,0,6.55,12.6],[4.47,0,9.65,12.6],[-1.45,3.69,2.1,5.22],[-1.45,-5.98,2.1,.65]])box('Upper concrete deck',x,3.86,z,w,.28,d,M.stone,upperFloor);
+for(const [x,z,w,d] of [[-5.78,0,6.55,12.6],[4.47,0,9.65,12.6],[-1.45,3.69,2.1,5.22],[-1.45,-5.85,2.1,.95]])box('Upper concrete deck',x,3.86,z,w,.28,d,M.stone,upperFloor);
 function woodFloor(x,z,w,d,y,parent){box('Hardwood floor',x,y,z,w,.055,d,M.floor,parent,false);const geo=measuredUV(new THREE.BoxGeometry(1.6,.016,.19),1.6,.016,.19),cols=Math.floor(w/1.6),rows=Math.floor(d/.2),mesh=new THREE.InstancedMesh(geo,M.floor,cols*rows),o=new THREE.Object3D(),c=new THREE.Color();let i=0;for(let r=0;r<rows;r++)for(let col=0;col<cols;col++){o.position.set(x-w/2+col*1.6+.8,y+.035,z-d/2+r*.2+.1);o.updateMatrix();mesh.setMatrixAt(i,o.matrix);const v=between(.9,1);c.setRGB(v,v*.99,v*.96);mesh.setColorAt(i++,c);}mesh.name='Oak floor boards with micro bevels';mesh.receiveShadow=true;parent.add(mesh);}
 woodFloor(0,0,17.85,12,FLOOR-.02,groundFloor);
-for(const [x,z,w,d] of [[-5.78,0,6.3,12],[4.42,0,9.38,12],[-1.45,3.67,2.1,5.18],[-1.45,-5.82,2.1,.35]])woodFloor(x,z,w,d,UPPER-.02,upperFloor);
+for(const [x,z,w,d] of [[-5.78,0,6.3,12],[4.42,0,9.38,12],[-1.45,3.67,2.1,5.18],[-1.45,-5.85,2.1,.95]])woodFloor(x,z,w,d,UPPER-.02,upperFloor);
 // Floating oak stair: 18 treads connect both floors, with continuous steel handrails.
 for(let i=0;i<18;i++){const z=.90-(i+.5)*.357,y=FLOOR+(i+1)*(UPPER-FLOOR)/18;round('Oak stair tread',-1.43,y-.055,z,1.70,.11,.37,.014,M.wood,groundFloor);glow('Stair under-tread light',-1.43,y-.08,z+.17,1.45,.013,.015,groundFloor);}
 for(let x of [-2.37,-.49]){
@@ -257,7 +257,13 @@ function sofa(x,z,w,rot,y,parent,m=M.fabric){
  }
  const p1=pillow('Soft decorative cushion',-w/2+.5,.88,.05,.46,.48,.16,M.accent,g,.20);p1.rotation.z=.17;
  const p2=pillow('Soft decorative cushion',w/2-.55,.86,.02,.45,.43,.16,M.linen,g,-.14);p2.rotation.z=-.15;
- contact(x,z,w+1,2,y+.003,parent,.18);return g;
+ contact(x,z,w+1,2,y+.003,parent,.18);
+ if(parent===groundFloor||parent===upperFloor){
+  const footprintWidth=Math.abs(Math.cos(rot))*w+Math.abs(Math.sin(rot))*1.10;
+  const footprintDepth=Math.abs(Math.sin(rot))*w+Math.abs(Math.cos(rot))*1.10;
+  block(x,z,footprintWidth,footprintDepth,parent===upperFloor?1:0,'Sofa');
+ }
+ return g;
 }
 function table(x,z,w,d,y,parent,m=M.stone){
  const g=group('Crafted stone table',parent);g.position.set(x,y,z);
@@ -662,13 +668,13 @@ function setQuality(value){
  $('#quality').value=value;lightingDirty=true;
 }
 function activateSpot(id,instant=false){
- const v=views[id];if(!v)return;activeView=id;pressed.clear();touchDirection='';floor2=Boolean(v.floor);camera.fov=48;camera.updateProjectionMatrix();
+ const v=views[id];if(!v)return;const wasWalking=mode==='walk';activeView=id;pressed.clear();touchDirection='';stairActive=false;lastWalkLabel='';floor2=Boolean(v.floor);footY=floor2?UPPER:FLOOR;camera.fov=48;camera.updateProjectionMatrix();
  document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===id));
  if(document.pointerLockElement===renderer.domElement)document.exitPointerLock();
  $('#floor').textContent=floor2?'↓ 1-qavat':'↑ 2-qavat';$('#floor').classList.toggle('active',floor2);
  if(v.orbit){
   mode='orbit';orbit.enabled=true;document.body.classList.remove('walking');
-  if(instant){camera.position.set(...v.position);orbit.target.set(...v.target);transition=null;orbit.update();}
+  if(instant||wasWalking){camera.position.set(...v.position);orbit.target.set(...v.target);transition=null;orbit.update();}
   else transition={from:camera.position.clone(),to:new THREE.Vector3(...v.position),lookFrom:orbit.target.clone(),lookTo:new THREE.Vector3(...v.target),t:0};
  }else{
   mode='walk';orbit.enabled=false;transition=null;document.body.classList.add('walking');camera.position.set(...v.position);footY=v.floor?UPPER:FLOOR;
@@ -677,47 +683,90 @@ function activateSpot(id,instant=false){
  $('#orbit').classList.toggle('active',mode==='orbit');$('#walk').classList.toggle('active',mode==='walk');
  setCut(id==='aerial');updateWalkLabel();renderer.domElement.dataset.view=id;renderer.domElement.dataset.mode=mode;
 }
-function updateWalkLabel(){const label=stairActive?'Zinapoya':floor2?'2-qavat':'1-qavat';if(label!==lastWalkLabel){$('#walk-location').textContent=label;lastWalkLabel=label;$('#floor').textContent=floor2?'↓ 1-qavat':'↑ 2-qavat';}}
-function onStairs(x,z){return x>-2.30&&x<-.56&&z>-5.58&&z<1.10;}
+function updateWalkLabel(){
+ const label=stairActive?'Zinapoya':floor2?'2-qavat':'1-qavat';
+ if(label!==lastWalkLabel){
+  $('#walk-location').textContent=label;
+  lastWalkLabel=label;
+ }
+ $('#floor').textContent=floor2?'↓ 1-qavat':'↑ 2-qavat';
+ $('#floor').classList.toggle('active',floor2);
+}
+const PLAYER_RADIUS=.28,STEPS_PER_METRE=14;
+const STAIR_START_Z=1.10,STAIR_END_Z=-5.58;
+function onStairs(x,z){return x>-2.30&&x<-.56&&z>STAIR_END_Z&&z<STAIR_START_Z;}
+function stairFloor(z){return FLOOR+clamp((.90-z)/6.42,0,1)*(UPPER-FLOOR);}
 function walkHeight(x,z){
- if(onStairs(x,z)){stairActive=true;return FLOOR+clamp((1.02-z)/6.50,0,1)*(UPPER-FLOOR);}
- stairActive=false;if(floor2)return UPPER;
+ if(onStairs(x,z)){stairActive=true;return stairFloor(z);}
+ stairActive=false;
+ // The previous physical height selects the landing at a staircase exit.
+ // Do not select a floor solely from a stale toggle or from camera pitch.
+ if(footY>(FLOOR+UPPER)/2)return UPPER;
  if(x>-9&&x<9&&z>-6.1&&z<6.15)return FLOOR;
- if(x>-3.4&&x<.0&&z>6.1&&z<8.4)return clamp((8.25-z)/2.0,0,1)*FLOOR;
+ if(x>-3.4&&x<0&&z>6.1&&z<8.4)return clamp((8.25-z)/2.0,0,1)*FLOOR;
  return .11;
 }
-function isBlocked(x,z,level=floor2?1:0){
- const radius=.18;
+function isBlocked(x,z,level=footY>(FLOOR+UPPER)/2?1:0,fromX=camera.position.x,fromZ=camera.position.z){
  if(x<-21.35||x>21.35||z<-17.8||z>29.3)return true;
- if(level===1&&!onStairs(x,z)){
-  const indoor=x>-8.97&&x<8.97&&z>-6.02&&z<6.18,balcony=x>.40&&x<9.65&&z>5.97&&z<8.34;
-  if(!indoor&&!balcony)return true;
+ const enteringStair=onStairs(x,z),leavingStair=onStairs(fromX,fromZ);
+ // A ramp has two physical entrances. Side entrances would let the camera
+ // pass through the balusters or change floor underneath the upper slab.
+ if(enteringStair!==leavingStair){
+  if(enteringStair){
+   const fromBottom=fromZ>=STAIR_START_Z&&footY<FLOOR+.48;
+   const fromTop=fromZ<=STAIR_END_Z&&footY>UPPER-.48;
+   if(!fromBottom&&!fromTop)return true;
+  }else{
+   const throughBottom=z>=STAIR_START_Z&&stairFloor(fromZ)<FLOOR+.48;
+   const throughTop=z<=STAIR_END_Z&&stairFloor(fromZ)>UPPER-.48;
+   if(!throughBottom&&!throughTop)return true;
+  }
  }
- for(const c of colliders){if(c.level!==level)continue;if(x>c.minX-radius&&x<c.maxX+radius&&z>c.minZ-radius&&z<c.maxZ+radius)return true;}
- if(level===0&&doors[0].angle<.64&&x>-2.88&&x<-.52&&Math.abs(z-6.13)<.26)return true;
- // The stair void has guardrails; approach its ramp through the front or rear landing.
- if(onStairs(x,z)&&!onStairs(camera.position.x,camera.position.z)){
-  if(Math.abs(x-camera.position.x)>.008&&z>-.3&&z<.9)return true;
-  if(z>-5.23&&z<.70)return true;
+ if(enteringStair){
+  // The space between the two continuous handrails is the walkable ramp.
+  if(x<-2.08||x>-.78)return true;
+  return false;
  }
+ if(level===1){
+  const indoors=x>-8.97&&x<8.97&&z>-6.02&&z<6.18;
+  const balcony=x>.40&&x<9.65&&z>5.97&&z<8.34;
+  if(!indoors&&!balcony)return true;
+  // The upper level has a real opening over the staircase, not an invisible floor.
+  if(x>-2.50&&x<-.36&&z>-5.57&&z<1.08)return true;
+ }
+ for(const c of colliders){
+  if(c.level!==level)continue;
+  if(x>c.minX-PLAYER_RADIUS&&x<c.maxX+PLAYER_RADIUS&&z>c.minZ-PLAYER_RADIUS&&z<c.maxZ+PLAYER_RADIUS)return true;
+ }
+ if(level===0&&doors[0].angle<.64&&x>-2.88&&x<-.52&&Math.abs(z-6.13)<.28)return true;
  return false;
 }
 const forward=new THREE.Vector3(),right=new THREE.Vector3();
 function moveStep(dx,dz){
- const distance=Math.hypot(dx,dz),steps=Math.max(1,Math.ceil(distance/.09));
+ const distance=Math.hypot(dx,dz),steps=Math.max(1,Math.ceil(distance*STEPS_PER_METRE));
  for(let i=0;i<steps;i++){
-  const x=camera.position.x+dx/steps,z=camera.position.z+dz/steps;
-  const proposedFloor=onStairs(x,z)?((1.02-z)/6.50>.5?1:0):(floor2?1:0);
-  if(!isBlocked(x,camera.position.z,proposedFloor))camera.position.x=x;
-  if(!isBlocked(camera.position.x,z,proposedFloor))camera.position.z=z;
+  const sx=dx/steps,sz=dz/steps;
+  const oldX=camera.position.x,oldZ=camera.position.z;
+  const nextX=oldX+sx;
+  if(!isBlocked(nextX,oldZ,footY>(FLOOR+UPPER)/2?1:0,oldX,oldZ))camera.position.x=nextX;
+  const nextZ=oldZ+sz;
+  if(!isBlocked(camera.position.x,nextZ,footY>(FLOOR+UPPER)/2?1:0,camera.position.x,oldZ))camera.position.z=nextZ;
+  footY=walkHeight(camera.position.x,camera.position.z);
+  floor2=footY>(FLOOR+UPPER)/2;
  }
- const fy=walkHeight(camera.position.x,camera.position.z);floor2=fy>(FLOOR+UPPER)/2;footY=fy;updateWalkLabel();
+ // Snap the eye to the actual floor at each step, rather than letting a
+ // smoothed camera momentarily drift through slabs and staircase treads.
+ camera.position.y=footY+1.62;
+ updateWalkLabel();
 }
 function move(dt){
  const f=Number(pressed.has('w')||pressed.has('arrowup')||touchDirection==='forward')-Number(pressed.has('s')||pressed.has('arrowdown')||touchDirection==='back');
  const s=Number(pressed.has('d')||pressed.has('arrowright')||touchDirection==='right')-Number(pressed.has('a')||pressed.has('arrowleft')||touchDirection==='left');
- if(!f&&!s)return;camera.getWorldDirection(forward);forward.y=0;forward.normalize();right.crossVectors(forward,THREE.Object3D.DEFAULT_UP).normalize();
- const speed=(pressed.has('shift')?4.3:2.15)*dt/Math.hypot(f,s);moveStep((forward.x*f+right.x*s)*speed,(forward.z*f+right.z*s)*speed);
+ if(!f&&!s)return;
+ camera.getWorldDirection(forward);forward.y=0;forward.normalize();
+ right.crossVectors(forward,THREE.Object3D.DEFAULT_UP).normalize();
+ const speed=(pressed.has('shift')?4.3:2.15)*dt/Math.hypot(f,s);
+ moveStep((forward.x*f+right.x*s)*speed,(forward.z*f+right.z*s)*speed);
 }
 function updateDoors(dt){
  for(const door of doors){const near=mode==='walk'&&Math.hypot(camera.position.x-door.x,camera.position.z-door.z)<2.8&&!floor2;
@@ -769,7 +818,7 @@ function render(t){
  requestAnimationFrame(render);const dt=Math.min((t-last)*.001,.045);last=t;elapsed+=dt;frame++;
  if(document.hidden)return;
  if(transition){transition.t=Math.min(1,transition.t+dt*.86);const s=1-Math.pow(1-transition.t,3);camera.position.lerpVectors(transition.from,transition.to,s);orbit.target.lerpVectors(transition.lookFrom,transition.lookTo,s);if(transition.t===1)transition=null;}
- if(mode==='orbit')orbit.update();else{camera.rotation.order='YXZ';camera.rotation.set(pitch,yaw,0);move(dt);camera.position.y=THREE.MathUtils.damp(camera.position.y,footY+1.62,11,dt);}
+ if(mode==='orbit')orbit.update();else{camera.rotation.order='YXZ';camera.rotation.set(pitch,yaw,0);move(dt);camera.position.y=footY+1.62;}
  updateDoors(dt);pool.material.uniforms.time.value+=dt*.28;for(const u of animatedLeaves)u.value=elapsed;
  renderer.shadowMap.needsUpdate=lightingDirty;renderer.render(scene,camera);lightingDirty=false;
 }
