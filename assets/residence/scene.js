@@ -200,17 +200,38 @@ wall('Master corridor rear',.58,-3.45,.16,5.3,1,M.plaster);
 box('Master doorway lintel',.58,UPPER+2.78,.94,.16,.68,1.30,M.plaster,upperFloor);
 // Upper floor slabs surround the actual staircase void.
 for(const [x,z,w,d] of [[-5.78,0,6.55,12.6],[4.47,0,9.65,12.6],[-1.45,3.69,2.1,5.22],[-1.45,-5.85,2.1,.95]])box('Upper concrete deck',x,3.86,z,w,.28,d,M.stone,upperFloor);
-function woodFloor(x,z,w,d,y,parent){box('Hardwood floor',x,y,z,w,.055,d,M.floor,parent,false);const geo=measuredUV(new THREE.BoxGeometry(1.6,.016,.19),1.6,.016,.19),cols=Math.floor(w/1.6),rows=Math.floor(d/.2),mesh=new THREE.InstancedMesh(geo,M.floor,cols*rows),o=new THREE.Object3D(),c=new THREE.Color();let i=0;for(let r=0;r<rows;r++)for(let col=0;col<cols;col++){o.position.set(x-w/2+col*1.6+.8,y+.035,z-d/2+r*.2+.1);o.updateMatrix();mesh.setMatrixAt(i,o.matrix);const v=between(.9,1);c.setRGB(v,v*.99,v*.96);mesh.setColorAt(i++,c);}mesh.name='Oak floor boards with micro bevels';mesh.receiveShadow=true;parent.add(mesh);}
+function woodFloor(x,z,w,d,y,parent){
+ box('Hardwood floor',x,y,z,w,.055,d,M.floor,parent,false);
+ // Boards cover the entire slab (no bare strips) and the end joints are staggered like a real laid floor.
+ const L=1.6,geo=measuredUV(new THREE.BoxGeometry(L,.016,.19),L,.016,.19),rows=Math.ceil(d/.2),pw=d/rows;
+ const mesh=new THREE.InstancedMesh(geo,M.floor,rows*(Math.ceil(w/L)+2)),o=new THREE.Object3D(),c=new THREE.Color();let i=0;
+ for(let k=Math.floor(w/L)*Math.floor(d/.2);k>0;k--)rand(); // keeps the seeded scatter used by the garden unchanged
+ for(let r=0;r<rows;r++){
+  const sn=Math.sin((r+1)*12.9898+x*78.233+z*37.719)*43758.5453,off=sn-Math.floor(sn);
+  let cx=0,len=.45+off*(L-.45);
+  while(cx<w-.001){
+   const rem=w-cx;len=Math.min(len,rem);if(rem-len<.3)len=rem;
+   o.position.set(x-w/2+cx+len/2,y+.035,z-d/2+(r+.5)*pw);o.scale.set(len/L,1,(pw-.01)/.19);o.updateMatrix();mesh.setMatrixAt(i,o.matrix);
+   const v=.9+(Math.sin(i*4.37+r)*.5+.5)*.1;c.setRGB(v,v*.99,v*.96);mesh.setColorAt(i++,c);
+   cx+=len;len=L;
+  }
+ }
+ mesh.count=i;mesh.name='Oak floor boards with micro bevels';mesh.receiveShadow=true;parent.add(mesh);
+}
 woodFloor(0,0,17.85,12,FLOOR-.02,groundFloor);
 for(const [x,z,w,d] of [[-5.78,0,6.3,12],[4.42,0,9.38,12],[-1.45,3.67,2.1,5.18],[-1.45,-5.85,2.1,.95]])woodFloor(x,z,w,d,UPPER-.02,upperFloor);
 // Floating oak stair: 18 treads connect both floors, with continuous steel handrails.
 for(let i=0;i<18;i++){const z=.90-(i+.5)*.357,y=FLOOR+(i+1)*(UPPER-FLOOR)/18;round('Oak stair tread',-1.43,y-.055,z,1.70,.11,.37,.014,M.wood,groundFloor);glow('Stair under-tread light',-1.43,y-.08,z+.17,1.45,.013,.015,groundFloor);}
 for(let x of [-2.37,-.49]){
- rod('Stair stringer',[x,FLOOR+.02,.90],[x,UPPER-.08,-5.52],.055,M.charcoal,groundFloor);
+ rod('Stair stringer',[x,FLOOR+.02,.90],[x,UPPER-.08,-5.52],.03,M.charcoal,groundFloor);
  rod('Stair continuous handrail',[x,FLOOR+1.02,.90],[x,UPPER+1.02,-5.52],.027,M.bronze,groundFloor);
  for(let i=0;i<18;i++){const z=.9-i*.357,y=FLOOR+i*(UPPER-FLOOR)/18;rod('Stair baluster',[x,y,z],[x,y+.98,z],.012,M.charcoal,groundFloor);}
  block(x,-2.23,.08,6.65,0,'Stair guard');block(x,-2.23,.08,6.65,1,'Stair guard');
 }
+// The upper-floor stair opening gets a glass guard on its open south edge (the sides already have handrails).
+box('Stair void glass guard',-1.43,UPPER+.56,1.075,2.10,1.0,.02,M.glass,upperFloor,false);
+rod('Stair void guard rail',[-2.49,UPPER+1.07,1.075],[-.37,UPPER+1.07,1.075],.022,M.steel,upperFloor);
+for(let x of [-2.49,-.37])box('Stair void guard post',x,UPPER+.55,1.075,.05,1.1,.05,M.steel,upperFloor);
 // White cantilevers, cedar soffits, balcony and rainwater details.
 box('Cantilever dark roof',0,7.46,-.03,21.3,.27,15.3,M.charcoal,roof);
 box('Knife-edge pale roof fascia',0,7.30,-.03,21.15,.10,15.15,M.plaster,roof);
@@ -724,7 +745,7 @@ function isBlocked(x,z,level=footY>(FLOOR+UPPER)/2?1:0,fromX=camera.position.x,f
  }
  if(enteringStair){
   // The space between the two continuous handrails is the walkable ramp.
-  if(x<-2.08||x>-.78)return true;
+  if(x<-2.02||x>-.84)return true;
   return false;
  }
  if(level===1){
