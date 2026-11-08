@@ -38,7 +38,8 @@ const building=new THREE.Group();building.name='Bektemir residence';scene.add(bu
 const groundFloor=new THREE.Group(),upperFloor=new THREE.Group(),roof=new THREE.Group(),garden=new THREE.Group(),glazing=new THREE.Group();
 for(const [g,n] of [[groundFloor,'Ground floor'],[upperFloor,'Upper floor'],[roof,'Roof'],[garden,'Garden and pool'],[glazing,'Exterior glazing']]){g.name=n;scene.add(g);}
 const FLOOR=.60,UPPER=4.0,CEILING=3.77,ROOF=7.46;
-let quality=mobile?'fast':'high',timeOfDay='day',mode='orbit',floor2=false,cut=false,transition=null,photo=false,exposureBase=.95;
+const embedded = new URLSearchParams(location.search).has('embed');
+let quality=(mobile || embedded)?'fast':'high',timeOfDay='day',mode='orbit',floor2=false,cut=false,transition=null,photo=false,exposureBase=.95;
 let yaw=0,pitch=0,footY=FLOOR,stairActive=false,doorManualUntil=0;
 let lightingDirty=true,elapsed=0,last=performance.now(),frame=0;
 
@@ -775,5 +776,6 @@ function render(t){
 $('#load-detail').textContent='Uy sayohatga tayyor';
 // Compile first: a slow shader compile should never be mistaken for a fully loaded model.
 renderer.compile(scene,camera);renderer.shadowMap.needsUpdate=true;renderer.render(scene,camera);lightingDirty=false;
-$('#loading').style.opacity='0';setTimeout(()=>$('#loading')?.remove(),650);requestAnimationFrame(render);
+setQuality(quality);
+ $('#loading').style.opacity='0';setTimeout(()=>$('#loading')?.remove(),650);requestAnimationFrame(render);
 if(new URLSearchParams(location.search).has('embed'))document.body.classList.add('compact');

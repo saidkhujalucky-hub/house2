@@ -71,3 +71,11 @@ frontend/
 ## Premium va yangi workflow
 
 Frontendga e’lon joylash, foto yuklash, sevimlilarni serverda saqlash, xabar yuborish va sotuvchining kelgan xabarlari uchun API integratsiyasi qo‘shilgan. Ular NestJS backendidagi yangi /properties va /favorites endpointlari ishga tushganda haqiqiy ishlaydi. GitHub Pages o‘zi backend vazifasini bajarmaydi. 3D sahifa va barcha mavjud login/kategoriya imkoniyatlari saqlangan.
+
+
+## 2026-11-08: galleries + performance
+
+- Namuna katalogi 8 tadan 20 tagacha kengaytirildi. Ular demo ma’lumotlar, haqiqiy e’lonlar emas.
+- Namuna uyda boshqa uylarning bir nechta fotosi ko‘rsatilmaydi: har bir demo obyektning o‘ziga biriktirilgan bitta bosh rasmi bor. Real e’lonlarda backenddagi propertyId bo‘yicha bog‘langan galereya ishlaydi.
+- Katalog 12 tadan ko‘rsatadi, "Yana ko‘rish" qo‘shimcha kartalarni ochadi; bosh sahifada 8 ta ko‘rsatiladi.
+- Unsplash fotosuratlarida responsive o‘lcham/siqish, native lazy-loading; thumbnail va kartalar ancha kichikroq fayl oladi. 3D iframe avtomatik tez grafik rejimida ochiladi (standalone yuqori sifatda qoladi).
