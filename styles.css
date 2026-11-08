@@ -499,5 +499,18 @@ body.tour-open{overflow:hidden}
 .tour-dialog-stage{flex:1;min-height:0;background:#0c1020}
 .tour-dialog-stage iframe{display:block;width:100%;height:100%;border:0}
 .tour-link{white-space:nowrap}
+.gallery-image-frame{position:absolute;inset:0;overflow:hidden}
+.gallery-image-frame .detail-main-image,.gallery-thumb-visual img{transform:scale(var(--photo-zoom,1));transform-origin:var(--photo-origin,50% 50%)}
+.gallery-section-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:19px 0 9px}
+.gallery-section-heading h2{font-size:19px;font-weight:600;margin:0;color:#f0dfc4}
+.gallery-section-heading>span{color:#a9b7ac;font-size:11px;text-align:right}
+.gallery-thumbs{display:flex;gap:10px;margin-top:0;overflow-x:auto;padding:3px 2px 12px;scroll-snap-type:x proximity;scrollbar-color:#b89d6b #16291e;scrollbar-width:thin}
+.gallery-thumb{display:flex;flex-direction:column;flex:0 0 142px;min-width:0;height:118px;border-radius:6px;background:#172b21;border:1px solid #a68c605c;scroll-snap-align:start;text-align:left;cursor:pointer}
+.gallery-thumb.active{border:2px solid #e7c386;box-shadow:0 0 0 1px #b1956045}
+.gallery-thumb-visual{display:block;width:100%;height:83px;overflow:hidden;flex:none}
+.gallery-thumb-caption{display:block;padding:8px 8px 7px;color:#d6d7c6;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gallery-thumb.active .gallery-thumb-caption{color:#edcf9b}
+.gallery-thumb:focus-visible{outline:2px solid #edcf9b;outline-offset:3px}
+@media(max-width:650px){.gallery-section-heading{margin-top:14px}.gallery-section-heading h2{font-size:17px}.gallery-section-heading>span{font-size:9px;max-width:175px}.gallery-thumbs{gap:8px}.gallery-thumb{flex-basis:112px;height:100px}.gallery-thumb-visual{height:67px}.gallery-thumb-caption{font-size:9px;padding:8px 6px}.tour-live-dot{letter-spacing:0;font-size:9px}}
 @media(max-width:700px){.property-tour-dialog{width:100vw;height:100dvh;max-height:100dvh;border:0;border-radius:0}.tour-dialog-header{padding:12px;gap:9px}.tour-dialog-header h2{font-size:17px}.tour-dialog-header p{display:none}.tour-close{padding:8px 11px}.tour-close span{display:none}.tour-hint{align-items:flex-start}.tour-hint button{margin-left:auto}}
 

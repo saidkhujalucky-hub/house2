@@ -89,3 +89,10 @@ Frontendga e’lon joylash, foto yuklash, sevimlilarni serverda saqlash, xabar y
 - 3D ichidagi «E’longa qaytish» dialogni yopadi. Yangi tab ochilmaydi va asosiy sahifa manzili o‘zgarmaydi.
 - Mahalliy tekshiruvlarda rasm bog‘lanishi, bo‘sh galereya, tartiblash, turli ID rasmlari, dialogni ochish/yopish va iframe tozalash tekshirildi. Tekshiruv brauzerida WebGL mavjud emasligi sababli modelning grafik renderi tekshirilmagan.
 
+## Galereya va 3D uchun alohida e’lon
+
+- Yangi `#/property/21` — «Basseynli ikki qavatli villa, Bektemir». Sakkizta galereya tasviri aynan mavjud 3D model geometriyasi va materiallaridan render qilingan; boshqa uyning stok fotosi ishlatilmaydi.
+- 3D faqat shu e’longa biriktirilgan. Eski `#/property/4` va umumiy headerdagi 3D tugmasi olib tashlangan. Alohida ochilgan 3D sahifadagi qaytish havolalari ham 21-e’longa qaytadi.
+- Har bir e’londa asosiy surat ostida tanlanadigan galereya bor. Faqat bitta surati mavjud demo e’lonlarda aynan o‘sha suratning umumiy, yaqin va detal ko‘rinishlari ko‘rsatiladi. Ular boshqa xonalar yoki alohida fotosuratlar deb ko‘rsatilmaydi.
+- Haqiqiy e’lonlarda faqat egasi yuklagan suratlar chiqadi. Miniatyura va oldinga/orqaga tugmalari katta rasmni almashtiradi.
+

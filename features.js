@@ -1,4 +1,4 @@
-import { propertyImages, hasTour } from './media.js';
+import { propertyImages } from './media.js?v=20261108-gallery';
 
 export function mountMarket(ctx){
   const {api,state,houses,root,render,navigate,toast,esc,photoTag}=ctx;
@@ -44,8 +44,6 @@ export function mountMarket(ctx){
     if(main&&path==='#/inbox')main.outerHTML=inboxPage();
     const nav=root.querySelector('.header-actions');
     if(nav&&!nav.querySelector('.publish-link'))nav.insertAdjacentHTML('afterbegin','<a class="btn btn-primary btn-sm publish-link" href="#/add-listing">+ E’lon berish</a>');
-    const tourHouse=houses.find(hasTour);
-    if(nav&&tourHouse&&!nav.querySelector('.tour-link'))nav.insertAdjacentHTML('afterbegin','<button type="button" class="btn btn-outline btn-sm tour-link" data-tour-id="'+tourHouse.id+'">◈ 3D uy</button>');
     const side=root.querySelector('.side-links');
     if(side){const a=side.querySelector('a[href="#/add-listing"]');if(a){a.href='#/my-listings';a.innerHTML='Mening e’lonlarim';}if(!side.querySelector('a[href="#/inbox"]'))side.insertAdjacentHTML('beforeend','<a href="#/inbox">✉ Kelgan xabarlar</a>');}
     if(live)root.querySelectorAll('.demo-note,.tiny-demo-tag').forEach(x=>x.remove());
