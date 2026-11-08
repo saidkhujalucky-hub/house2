@@ -38,6 +38,8 @@ export function mountMarket(ctx) {
     const params={page:Math.max(1,Number(q.get('page'))||1),sort:q.get('sort')||'newest'};
     if(q.get('type'))params.type=q.get('type');
     if(q.get('max'))params.maxPrice=q.get('max');
+    if(q.get('min'))params.minPrice=q.get('min');
+    if(q.get('rooms'))params.rooms=q.get('rooms');
     if(q.get('location'))params.city=q.get('location');
     if(q.get('category')){
       const key=q.get('category').toLocaleLowerCase();
@@ -193,10 +195,11 @@ export function mountMarket(ctx) {
     if(path.startsWith('#/property/')){
       const id=Number(path.split('/')[2]);if(!id)return;
       if(!online&&state.propertyApi!=='online')return;
+      state.detailError=null;
       const seq=++detailId;
       try{const p=normalize(await api.property(id));if(seq!==detailId||route()!==path)return;
         const idx=houses.findIndex(x=>x.id===id);if(idx<0)houses.push(p);else houses[idx]=p;render();
-      }catch(e){if(seq!==detailId)return;if(e.status===404){const idx=houses.findIndex(x=>x.id===id);if(idx>=0&&houses[idx].real)houses.splice(idx,1);render();}else if(!error(e))toast(e.message,'error');}
+      }catch(e){if(seq!==detailId)return;if(e.status===404){state.detailError=id;const idx=houses.findIndex(x=>x.id===id);if(idx>=0&&houses[idx].real)houses.splice(idx,1);render();}else if(!error(e))toast(e.message,'error');}
       return;
     }
     if(path==='#/my-listings'||path.startsWith('#/edit-listing/')){
@@ -225,6 +228,7 @@ export function mountMarket(ctx) {
         f.reset();toast('Murojaat yuborildi');return;
       }
       const files=[...f.querySelector('[name=images]').files];
+      if(files.length>8)throw Error('8 tagacha rasm qo‘shish mumkin');
       if(files.some(x=>x.size>5*1024*1024||!['image/jpeg','image/png','image/webp'].includes(x.type)))throw Error('JPG, PNG yoki WebP, har biri 5 MB dan kichik bo‘lsin');
       const payload={title:String(data.get('title')).trim(),description:String(data.get('description')).trim(),
         price:Number(data.get('price')),currency:data.get('currency'),listingType:data.get('listingType'),
