@@ -42,6 +42,7 @@ export function mountMarket(ctx){
     if(main&&path==='#/inbox')main.outerHTML=inboxPage();
     const nav=root.querySelector('.header-actions');
     if(nav&&!nav.querySelector('.publish-link'))nav.insertAdjacentHTML('afterbegin','<a class="btn btn-primary btn-sm publish-link" href="#/add-listing">+ E’lon berish</a>');
+    if(nav&&!nav.querySelector('.tour-link'))nav.insertAdjacentHTML('afterbegin','<a class="btn btn-outline btn-sm tour-link" href="./premium-house.html" target="_blank" rel="noopener noreferrer">◈ 3D uy</a>');
     const side=root.querySelector('.side-links');
     if(side){const a=side.querySelector('a[href="#/add-listing"]');if(a){a.href='#/my-listings';a.innerHTML='Mening e’lonlarim';}if(!side.querySelector('a[href="#/inbox"]'))side.insertAdjacentHTML('beforeend','<a href="#/inbox">✉ Kelgan xabarlar</a>');}
     if(live)root.querySelectorAll('.demo-note,.tiny-demo-tag').forEach(x=>x.remove());
