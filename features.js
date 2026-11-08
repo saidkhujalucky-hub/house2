@@ -30,6 +30,7 @@ export function mountMarket(ctx) {
       if(seq!==requestId)return;
       state.propertyLoading=false;state.propertyError=e.message;
       if(!online)state.propertyApi='offline';
+      else if(route()==='#/listings'){houses.splice(0,houses.length);state.propertyMeta={page:1,limit:12,total:0,totalPages:0};}
       render();
     }
   };
@@ -45,6 +46,7 @@ export function mountMarket(ctx) {
       const key=q.get('category').toLocaleLowerCase();
       const cat=state.categories.find(x=>x.name.toLocaleLowerCase()===key||x.slug===key);
       if(cat)params.category=cat.slug;
+      else if(/^[a-z0-9-]+$/.test(key))params.category=key;
     }
     return params;
   };
@@ -154,6 +156,10 @@ export function mountMarket(ctx) {
       if(!side.querySelector('a[href="#/my-inquiries"]'))side.insertAdjacentHTML('beforeend','<a href="#/my-inquiries">✉ Mening murojaatlarim</a>');
     }
     if(online)root.querySelectorAll('.demo-note,.tiny-demo-tag').forEach(x=>x.remove());
+    if(state.propertyError&&online&&(path==='#/listings'||path==='#/')){
+      root.querySelector('.results,.listings-section')?.insertAdjacentHTML('afterbegin',
+        '<div class="error-banner">Backend bilan aloqa xatosi: '+esc(state.propertyError)+'</div>');
+    }
     if(path==='#/listings'&&online){
       const results=root.querySelector('.results');
       const summary=results?.querySelector('.results-top p');
@@ -167,7 +173,7 @@ export function mountMarket(ctx) {
       if(p&&detail){
         const d=document.createElement('section');d.id='market-contact';d.className='card-surface market-contact';
         d.innerHTML=!p.real?'<h2>Namuna uy</h2><p>Bu e’lon real sotuvchiga tegishli emas.</p>':!state.user?
-          '<h2>Sotuvchiga xabar yozish</h2><p>Avval tizimga kiring.</p><a href="#/login" class="btn btn-primary">Kirish</a>':
+          '<h2>Sotuvchi</h2><p>'+esc(p.owner?.fullName||'Sotuvchi')+(p.owner?.phone?' · '+esc(p.owner.phone):'')+'</p><p>Murojaat yuborish uchun kiring.</p><a href="#/login" class="btn btn-primary">Kirish</a>':
           p.ownerId===Number(state.user.id)?'<h2>Sizning e’loningiz</h2><a href="#/my-listings" class="text-link">Boshqarish</a>':
           '<h2>Sotuvchiga xabar</h2><p>'+esc(p.owner?.fullName||'Sotuvchi')+(p.owner?.phone?' · '+esc(p.owner.phone):'')+'</p>'+
           '<form id="market-inquiry" class="form-stack"><input type="hidden" name="propertyId" value="'+p.id+'">'+
