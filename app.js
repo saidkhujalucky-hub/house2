@@ -1,5 +1,5 @@
 import { api } from './api.js?v=20261108-uyma-uy-v3';
-import { mountMarket } from './features.js?v=20261108-uyma-uy-v3';
+import { mountMarket } from './features.js?v=20261108-uyma-uy-v4';
 import { assignDemoPhotos, createResidenceListing, galleryViews, hasTour, MISSING_PHOTO } from './media.js?v=20261108-unique-rooms';
 import { mountTour } from './tour.js?v=20261108-fix2';
 
