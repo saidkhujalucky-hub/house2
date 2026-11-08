@@ -452,8 +452,9 @@ round('Dressing island',4.9,UPPER+.47,-3.35,2.0,.85,.95,.045,M.linen,upperFloor)
 rug(-5.85,3.22,4.8,4.4,UPPER+.038,upperFloor,M.linen);bed(-5.87,3.43,0,UPPER,upperFloor);block(-5.87,3.43,2.15,2.40,1,'Upper guest bed');
 round('Studio oak desk',-5.9,UPPER+.77,.37,2.75,.065,.69,.024,M.wood,upperFloor);for(let x of [-7,-4.8])rod('Desk tapered leg',[x,UPPER+.03,.37],[x,UPPER+.74,.37],.03,M.walnut,upperFloor);block(-5.9,.37,2.8,.72,1,'Writing desk');
 round('Laptop aluminium base',-5.75,UPPER+.825,.39,.57,.018,.38,.009,M.steel,upperFloor);
-const screen=round('Laptop display',-5.75,UPPER+1.01,.65,.57,.36,.018,.008,M.charcoal,upperFloor);screen.rotation.x=-.12;
-box('Laptop luminous screen',-5.75,UPPER+1.01,.635,.53,.32,.006,new THREE.MeshBasicMaterial({color:'#91a5a4'}),upperFloor,false);
+const lid=group('Laptop lid on rear hinge',upperFloor);lid.position.set(-5.75,UPPER+.834,.205);lid.rotation.x=-.30;
+round('Laptop display',0,.18,.009,.57,.36,.018,.008,M.charcoal,lid);
+box('Laptop luminous screen',0,.18,.0185,.53,.32,.004,new THREE.MeshBasicMaterial({color:'#91a5a4'}),lid,false);
 for(let row=0;row<4;row++)for(let col=0;col<10;col++)box('Laptop key',-5.98+col*.048,UPPER+.839,.31+row*.038,.035,.004,.026,M.charcoal,upperFloor,false);
 book(-6.85,UPPER+.82,.39,.38,.26,'#8a977e',upperFloor);mug(-4.98,UPPER+.81,.38,upperFloor);
 curtain(-8.56,5.99,.6,UPPER+1.54,3.0,upperFloor);curtain(-3.1,5.99,.6,UPPER+1.54,3.0,upperFloor);
