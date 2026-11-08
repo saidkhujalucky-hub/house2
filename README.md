@@ -1,5 +1,20 @@
 # MarketPlace — frontend (NestJS backendni o‘zgartirmaydi)
 
+## 2026-11-08 — Uyma-uy API frontend integratsiyasi (joriy holat)
+
+Bu versiya **Uyma-uy API — Frontendchilar uchun qo‘llanma** PDFdagi endpointlarga moslashtirilgan. Oldingi README bo‘limlaridagi demo-only ta'riflar avvalgi versiyaga tegishli.
+
+- Public GET /properties endpointidan { data, meta } formatidagi APPROVED e’lonlar olinadi; page, limit=12, city, category (slug), type, minPrice, maxPrice, rooms va sort query orqali yuboriladi. Katalogda pagination ham bor.
+- GET /properties/:id barcha e’lon rasmlari hamda sotuvchi kontaktini ko‘rsatish uchun ishlatiladi.
+- Seller sahifasi: GET /properties/my, POST /properties, PATCH /properties/:id, DELETE /properties/:id. Yangi va tahrirlangan e’lonlar PENDING statusini oladi; statusni server boshqaradi.
+- Rasm yuklash: har bir fayl alohida POST /properties/:id/images, FormData kaliti image, 5 MB chegarasi; mavjud rasm DELETE /properties/:id/images/:imageId bilan o‘chiriladi.
+- GET/POST/DELETE /favorites, POST /properties/:id/inquiries, GET /inquiries/my (yuborilgan murojaatlar).
+- Admin sahifasida GET /admin/properties?status=PENDING, PATCH /admin/properties/:id/status (faqat APPROVED yoki REJECTED) va GET /admin/users.
+- Register/Login, profil va kategoriyalar CRUD saqlangan. Xatolar backendning message maydonidan olinadi; muddati tugagan token bo‘lsa login oynasiga qaytaradi.
+- Mavjud 3D konsept, dizayn va demo rasmlar backend **ulanmagan** holatda ham namoyish bo‘lib qoladi; ular haqiqiy e’lonlar emas. Backend mavjud bo‘lsa, public ro‘yxat serverdan keladi.
+
+**Ulash bo‘yicha muhim izoh:** config.js hozircha http://localhost:3000 ga qaraydi. GitHub Pages'dagi HTTPS saytdan bu manzilga boshqa foydalanuvchilar ulana olmaydi. Backendni HTTPS hostingga joylashtirgandan keyin config.js dagi apiBaseUrl ni haqiqiy server manziliga almashtiring. Lokal sinash uchun localhost:3000 da API, localhost:5500 da frontendni ishga tushiring. JSON va multipart endpointlarni qo‘llanmadagi real backend bilan browserda sinash kerak; koddagi mock tekshiruvlar real serverning ishlashiga kafolat bermaydi.
+
 Bu **alohida, dependenciesiz HTML / CSS / JavaScript frontend**. Dizayn: qora-binafsha, villa hero banneri, kategoriya kartalari, e’lonlar katalogi, uy tafsilotlari, login, register, profil va ADMIN kategoriyalari.
 
 ## 1. Ishga tushirish
