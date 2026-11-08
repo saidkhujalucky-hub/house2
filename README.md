@@ -96,3 +96,12 @@ Frontendga e’lon joylash, foto yuklash, sevimlilarni serverda saqlash, xabar y
 - Har bir e’londa asosiy surat ostida tanlanadigan galereya bor. Faqat bitta surati mavjud demo e’lonlarda aynan o‘sha suratning umumiy, yaqin va detal ko‘rinishlari ko‘rsatiladi. Ular boshqa xonalar yoki alohida fotosuratlar deb ko‘rsatilmaydi.
 - Haqiqiy e’lonlarda faqat egasi yuklagan suratlar chiqadi. Miniatyura va oldinga/orqaga tugmalari katta rasmni almashtiradi.
 
+
+## 2026-11-08 (2): 3D tuzatishlar va xona rasmlari
+
+- **Noutbuk:** ekran endi orqa sharnirda, foydalanuvchi tomonga qaragan (avval teskari turgan edi).
+- **Zinapoya:** yon tirgaklar ingichkalashtirildi va yurish yo‘lagi biroz toraytirildi — kamera qora diagonal chiziqqa yopishib qolmaydi.
+- **Parket:** taxtalar butun maydonni qoplaydi (avval chetlarida yalang‘och chiziqlar qolgan), tutashuv chiziqlari shaxmat tartibida.
+- **2-qavat:** zinapoya teshigining ochiq chetiga shisha to‘siq qo‘shildi.
+- **E’lonlar:** namunaviy e’lonlarda (yer uchastkasidan tashqari) bosh suratdan keyin Bektemir konsept modelining xona rasmlari (mehmonxona, oshxona, yotoqxonalar, hammom, villalarda basseyn) ko‘rsatiladi. Ular konsept 3D modeldan olingan namuna ekani galereya sarlavhasida yozilgan.
+- Backend (`api.js`, `backend-patch/`) o‘zgartirilmagan.
