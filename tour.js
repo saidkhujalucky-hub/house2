@@ -1,4 +1,4 @@
-import { hasTour } from './media.js?v=20261108-gallery';
+import { hasTour } from './media.js?v=20261108-fix2';
 
 export function mountTour({ houses, toast }) {
   const dialog = document.createElement('dialog');
@@ -30,7 +30,7 @@ export function mountTour({ houses, toast }) {
     dialog.querySelector('h2').textContent = listing.title;
     const frame = document.createElement('iframe');
     frame.title = `${listing.title} — interaktiv 3D sayohat`;
-    frame.src = './premium-house.html?embed=1&expanded=1&v=20261108-gallery';
+    frame.src = './premium-house.html?embed=1&expanded=1&v=20261108-fix2';
     frame.setAttribute('allow', 'fullscreen');
     frame.setAttribute('allowfullscreen', '');
     frame.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-pointer-lock');
