@@ -45,19 +45,33 @@ export const api = {
   editCategory: (token, id, body) => request(`/categories/${encodeURIComponent(id)}`, { method: 'PATCH', token, body }),
   deleteCategory: (token, id) => request(`/categories/${encodeURIComponent(id)}`, { method: 'DELETE', token }),
   properties: (params={}) => request('/properties?'+new URLSearchParams(params)),
-  myProperties: token => request('/properties/mine',{token}),
+  myProperties: token => request('/properties/my',{token}),
+  property: id => request('/properties/'+encodeURIComponent(id)),
+  updateProperty: (token,id,body) => request('/properties/'+encodeURIComponent(id),{method:'PATCH',token,body}),
   createProperty: (token,body) => request('/properties',{method:'POST',token,body}),
   deleteProperty: (token,id) => request('/properties/'+encodeURIComponent(id),{method:'DELETE',token}),
   getFavorites: token => request('/favorites',{token}),
   addFavorite: (token,id) => request('/favorites/'+encodeURIComponent(id),{method:'POST',token}),
   removeFavorite: (token,id) => request('/favorites/'+encodeURIComponent(id),{method:'DELETE',token}),
-  inquiries: token => request('/properties/inquiries/received',{token}),
+  inquiries: token => request('/inquiries/my',{token}),
+  adminProperties: (token,params={}) => request('/admin/properties?'+new URLSearchParams(params),{token}),
+  adminStatus: (token,id,status) => request('/admin/properties/'+encodeURIComponent(id)+'/status',{method:'PATCH',token,body:{status}}),
+  adminUsers: token => request('/admin/users',{token}),
+  deleteImage: (token,id,imageId) => request('/properties/'+encodeURIComponent(id)+'/images/'+encodeURIComponent(imageId),{method:'DELETE',token}),
   sendInquiry: (token,id,body) => request('/properties/'+encodeURIComponent(id)+'/inquiries',{method:'POST',token,body}),
-  uploadImages: async (token,id,body) => {
-    const response=await fetch(API_BASE_URL+'/properties/'+encodeURIComponent(id)+'/images',{method:'POST',headers:{Authorization:'Bearer '+token},body});
-    const result=await response.json().catch(()=>null);
-    if(!response.ok)throw new ApiError(Array.isArray(result?.message)?result.message.join(' • '):(result?.message||'Rasm yuklash xatosi'),response.status);
-    return result;
+  // Uyma-uy API accepts one image per multipart request, key "image".
+  uploadImages: async (token,id,files) => {
+    const results=[];
+    for(const file of files){
+      const form=new FormData();form.append('image',file);
+      let response;
+      try{response=await fetch(API_BASE_URL+'/properties/'+encodeURIComponent(id)+'/images',{
+        method:'POST',headers:{Authorization:'Bearer '+token},body:form
+      });}catch{throw new ApiError('Rasm yuklashda serverga ulanib bo‘lmadi');}
+      const data=await response.json().catch(()=>null);
+      if(!response.ok)throw new ApiError(Array.isArray(data?.message)?data.message.join(' • '):(data?.message||'Rasm yuklash xatosi'),response.status);
+      results.push(data);
+    }
+    return results;
   },
-
 };
